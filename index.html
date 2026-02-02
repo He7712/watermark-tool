@@ -3,18 +3,18 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Watermark Tool</title>
+  <title>服装网图水印</title>
 
-  <!-- 在线艺术字体（需要网络；也支持上传本地字体离线用） -->
+  <!-- 服装风格更常用的干净字体（也可上传本地字体） -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;500;800&family=Playfair+Display:wght@400;700&family=Pacifico&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500;800&family=Bebas+Neue&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg1:#fff5f8;
-      --bg2:#f3f3ff;
-      --card:rgba(255,255,255,.86);
+      --bg1:#fff3f7;
+      --bg2:#f3f2ff;
+      --card:rgba(255,255,255,.88);
       --stroke:rgba(0,0,0,.06);
       --text:#1f1f24;
       --sub:#6a6a78;
@@ -26,7 +26,7 @@
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text","Helvetica Neue", Arial;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text","Helvetica Neue", Arial;
       color:var(--text);
       background:
         radial-gradient(1200px 800px at 10% 0%, var(--bg1), transparent 60%),
@@ -35,13 +35,20 @@
       min-height:100vh;
       padding: calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
     }
-    .wrap{max-width:560px;margin:0 auto;}
+    .wrap{max-width:520px;margin:0 auto;}
     .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
     .title{font-size:18px;font-weight:900;letter-spacing:.2px;display:flex;gap:8px;align-items:center;}
     .dot{
       width:10px;height:10px;border-radius:999px;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       box-shadow:0 6px 18px rgba(255,92,147,.25);
+    }
+    .pill{
+      display:inline-flex;gap:6px;align-items:center;
+      padding:7px 10px;border-radius:999px;
+      background: rgba(255,255,255,.78);
+      border:1px solid rgba(0,0,0,.06);
+      font-size:12px;color:var(--sub);
     }
     .hint{font-size:12px;color:var(--sub);line-height:1.45;margin:6px 0 12px;}
     .card{
@@ -69,7 +76,7 @@
       box-shadow: 0 0 0 4px rgba(108,99,255,.10);
     }
     .row{display:flex;gap:10px;}
-    .row > *{flex:1;}
+    .row>*{flex:1;}
     .seg{display:flex;gap:10px;}
     .seg button{
       flex:1;
@@ -94,46 +101,40 @@
     }
     .cta:disabled{opacity:.55;box-shadow:none}
     .mini{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.45;}
-    .pill{
-      display:inline-flex;gap:6px;align-items:center;
-      padding:7px 10px;border-radius:999px;
-      background: rgba(255,255,255,.78);
-      border:1px solid rgba(0,0,0,.06);
-      font-size:12px;color:var(--sub);
-    }
     .hidden{display:none!important;}
 
-    /* 预览容器：纯净透明，绝不画网格、绝不显示底纹 */
+    /* 预览：透明纯净（不可能出现网格/数字/底纹） */
     .previewBox{
       position:relative;
       width:100%;
       border-radius:16px;
       overflow:hidden;
       border:1px solid rgba(0,0,0,.06);
-      background: transparent; /* ✅ 纯净 */
+      background: transparent;
       touch-action:none;
     }
     canvas{
       display:block;
       width:100%;
       height:auto;
-      background: transparent; /* ✅ 纯净 */
+      background: transparent;
     }
 
-    /* 可拖动水印层：仅用于定位辅助（不会导出） */
+    /* 拖动水印层：只用于定位，不会导出 */
     .wmDrag{
       position:absolute;
       left:50%; top:50%;
       transform: translate(-50%,-50%);
       padding:6px 10px;
       border-radius:12px;
-      background: rgba(255,255,255,.0);
+      background: rgba(255,255,255,.00);
       color:#fff;
-      font-weight:900;
+      font-weight:800;
       white-space:nowrap;
       user-select:none; -webkit-user-select:none;
-      text-shadow: 0 2px 12px rgba(0,0,0,.26);
       border: 1px dashed rgba(255,255,255,.35);
+      text-shadow: 0 2px 12px rgba(0,0,0,.22);
+      pointer-events:auto;
     }
     .wmDrag.grab{border-style:solid; background: rgba(255,255,255,.10);}
     .btnRow{display:flex;gap:10px;margin-top:10px;}
@@ -145,13 +146,13 @@
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="title"><span class="dot"></span>批量加水印</div>
+    <div class="title"><span class="dot"></span>服装网图水印</div>
     <div class="pill" id="countPill">未选图</div>
   </div>
 
   <div class="hint">
-    单个水印：<b>拖动文字</b>定位；平铺：防盗更强。<br/>
-    建议一次选 <b>10–30 张</b> 更顺（iPhone 会逐张下载）。
+    ✅ 服装图专用：只填充文字，不描边不发灰。<br/>
+    单个模式可拖动；平铺用于防盗。建议每次 10–30 张。
   </div>
 
   <div class="card">
@@ -161,7 +162,7 @@
     <label>水印文字</label>
     <input id="text" value="SMT S/S 2026" />
 
-    <label>水印模式</label>
+    <label>模式</label>
     <div class="seg">
       <button id="btnSingle" class="active" type="button">单个（可拖动）</button>
       <button id="btnTile" type="button">平铺</button>
@@ -169,31 +170,47 @@
 
     <div class="divider"></div>
 
-    <label>字体（艺术字体）</label>
+    <label>字体</label>
     <select id="font">
-      <option value="Montserrat">Montserrat（高级简洁）</option>
+      <option value="Montserrat">Montserrat（干净高级）</option>
       <option value="Bebas Neue">Bebas Neue（时装海报）</option>
       <option value="Playfair Display">Playfair Display（杂志高级）</option>
-      <option value="Pacifico">Pacifico（甜酷手写）</option>
-      <option value="Orbitron">Orbitron（科技感）</option>
       <option value="-apple-system">iOS 系统字体（离线）</option>
       <option value="__uploaded__">使用我上传的字体</option>
     </select>
 
     <label>上传本地字体（可选：ttf/otf/woff/woff2）</label>
     <input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" />
-    <div class="mini" id="fontTip">离线也能用：上传字体后，字体选择“使用我上传的字体”。</div>
+    <div class="mini">上传后在上面字体选择“使用我上传的字体”。</div>
   </div>
 
   <div class="card">
     <div class="row">
       <div>
-        <label>透明度（建议 0.12–0.18）</label>
-        <input id="alpha" type="number" step="0.01" min="0" max="1" value="0.16" />
+        <label>透明度（服装图建议 0.18–0.28）</label>
+        <input id="alpha" type="number" step="0.01" min="0" max="1" value="0.22" />
       </div>
       <div>
-        <label>大小（建议 40–60）</label>
-        <input id="size" type="number" min="10" max="160" value="52" />
+        <label>大小（建议 42–62）</label>
+        <input id="size" type="number" min="10" max="160" value="54" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>阴影（清晰但不发灰）</label>
+        <select id="shadow">
+          <option value="on" selected>开启</option>
+          <option value="off">关闭（最纯净）</option>
+        </select>
+      </div>
+      <div>
+        <label>颜色</label>
+        <select id="color">
+          <option value="#ffffff" selected>纯白</option>
+          <option value="rgba(255,255,255,0.92)">柔白（更高级）</option>
+          <option value="rgba(255,255,255,0.80)">淡白（更低调）</option>
+        </select>
       </div>
     </div>
 
@@ -201,7 +218,7 @@
       <label>平铺角度（-20~-35 常用）</label>
       <input id="angle" type="number" min="-90" max="90" value="-26" />
       <label>平铺间距（180–260 常用）</label>
-      <input id="gap" type="number" min="60" max="600" value="220" />
+      <input id="gap" type="number" min="60" max="900" value="230" />
     </div>
 
     <div class="divider"></div>
@@ -217,21 +234,19 @@
     </div>
 
     <div class="btnRow">
-      <button id="resetPos" class="ghost" type="button">重置到右下</button>
+      <button id="resetPos" class="ghost" type="button">右下</button>
       <button id="centerPos" class="ghost" type="button">居中</button>
     </div>
-
     <div class="mini" id="posInfo">位置：—</div>
   </div>
 </div>
 
 <script>
   const $ = (id)=>document.getElementById(id);
-
-  let mode = "single"; // single | tile
+  let mode = "single";
   let uploadedFontFamily = null;
 
-  // 单水印位置（相对比例 0~1）
+  // 单水印位置（比例）
   let pos = { x: 0.86, y: 0.88 };
   let isDragging = false;
   let dragOffset = { x: 0, y: 0 };
@@ -275,26 +290,38 @@
     return img;
   }
 
-  // ✅ 只画文字水印（无底纹、无格子、无数字、无任何辅助线）
+  // ✅ 服装网图“干净渲染”：只填充，不描边（彻底解决发灰/底纹）
   function applyTextStyle(ctx, fontSize){
     const family = getFontFamily();
     ctx.font = `${fontSize}px ${family}, -apple-system, "Helvetica Neue", Arial`;
-    ctx.fillStyle = "#fff";
-    ctx.strokeStyle = "rgba(0,0,0,0.28)";
-    ctx.lineWidth = Math.max(2, Math.round(fontSize/18));
-    ctx.lineJoin = "round";
-    ctx.miterLimit = 2;
-
-    // 抗锯齿尽力（浏览器会自动处理）
     ctx.textBaseline = "middle";
+    ctx.fillStyle = $("color").value;
+
+    // 不描边（关键）
+    ctx.strokeStyle = "transparent";
+    ctx.lineWidth = 0;
+
+    // 阴影可开关：开了更清楚，但不发灰
+    const shadow = $("shadow").value;
+    if(shadow === "on"){
+      ctx.shadowColor = "rgba(0,0,0,0.18)";
+      ctx.shadowBlur = Math.max(2, Math.round(fontSize/16));
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+    }else{
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
   }
 
   function drawSingle(ctx, w, h){
     const text = ($("text").value || "").trim();
     if(!text) return;
 
-    const alpha = clamp(Number($("alpha").value || 0.16), 0, 1);
-    const baseSize = clamp(Number($("size").value || 52), 10, 160);
+    const alpha = clamp(Number($("alpha").value || 0.22), 0, 1);
+    const baseSize = clamp(Number($("size").value || 54), 10, 160);
 
     const scale = Math.max(w,h) / 1200;
     const fontSize = Math.max(12, Math.round(baseSize * scale));
@@ -303,14 +330,11 @@
     ctx.globalAlpha = alpha;
     applyTextStyle(ctx, fontSize);
 
-    const metrics = ctx.measureText(text);
-    const tw = metrics.width;
-
-    // 以中心点定位
+    const tw = ctx.measureText(text).width;
     const x = clamp(pos.x, 0.03, 0.97) * w - tw/2;
     const y = clamp(pos.y, 0.04, 0.96) * h;
 
-    ctx.strokeText(text, x, y);
+    // ✅ 只 fillText
     ctx.fillText(text, x, y);
     ctx.restore();
   }
@@ -319,9 +343,9 @@
     const text = ($("text").value || "").trim();
     if(!text) return;
 
-    const alpha = clamp(Number($("alpha").value || 0.16), 0, 1);
-    const baseSize = clamp(Number($("size").value || 52), 10, 160);
-    const gap = clamp(Number($("gap").value || 220), 60, 900);
+    const alpha = clamp(Number($("alpha").value || 0.22), 0, 1);
+    const baseSize = clamp(Number($("size").value || 54), 10, 160);
+    const gap = clamp(Number($("gap").value || 230), 60, 900);
     const angle = clamp(Number($("angle").value || -26), -90, 90);
 
     const scale = Math.max(w,h) / 1200;
@@ -331,29 +355,24 @@
     ctx.globalAlpha = alpha;
     applyTextStyle(ctx, fontSize);
 
-    // 旋转平铺
     ctx.translate(w/2, h/2);
     ctx.rotate(angle * Math.PI / 180);
     ctx.translate(-w/2, -h/2);
 
-    const step = gap;
-
-    for(let y=-h; y<h*2; y+=step){
-      for(let x=-w; x<w*2; x+=step){
-        ctx.strokeText(text, x, y);
-        ctx.fillText(text, x, y);
+    for(let y=-h; y<h*2; y+=gap){
+      for(let x=-w; x<w*2; x+=gap){
+        ctx.fillText(text, x, y); // ✅ 只 fill
       }
     }
-
     ctx.restore();
   }
 
   function render(img, canvas){
-    const ctx = canvas.getContext("2d", { alpha: true });
+    const ctx = canvas.getContext("2d", { alpha:true });
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
 
-    // ✅ 关键：永远先画原图，不画任何背景/网格
+    // ✅ 永远只画原图，不画任何底纹/网格
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(img, 0, 0);
 
@@ -391,13 +410,12 @@
   function syncDragOverlay(){
     const box = $("previewBox");
     const wm = $("wmDrag");
-
     const text = ($("text").value || "").trim() || " ";
     wm.textContent = text;
-    wm.style.opacity = clamp(Number($("alpha").value || 0.16), 0, 1);
+    wm.style.opacity = clamp(Number($("alpha").value || 0.22), 0, 1);
     wm.style.fontFamily = `${getFontFamily()}, -apple-system, "Helvetica Neue", Arial`;
 
-    const baseSize = clamp(Number($("size").value || 52), 10, 160);
+    const baseSize = clamp(Number($("size").value || 54), 10, 160);
     const scale = box.clientWidth / 420;
     wm.style.fontSize = Math.max(12, Math.round(baseSize*scale)) + "px";
 
@@ -411,9 +429,8 @@
   }
 
   function pointerPos(e){
-    const box = $("previewBox");
-    const rect = box.getBoundingClientRect();
-    return { x: (e.clientX - rect.left), y: (e.clientY - rect.top), w: rect.width, h: rect.height };
+    const rect = $("previewBox").getBoundingClientRect();
+    return { x: (e.clientX-rect.left), y:(e.clientY-rect.top), w:rect.width, h:rect.height };
   }
 
   function startDrag(e){
@@ -421,9 +438,7 @@
     const p = pointerPos(e);
     isDragging = true;
     $("wmDrag").classList.add("grab");
-
-    const curX = pos.x * p.w;
-    const curY = pos.y * p.h;
+    const curX = pos.x * p.w, curY = pos.y * p.h;
     dragOffset.x = p.x - curX;
     dragOffset.y = p.y - curY;
   }
@@ -432,10 +447,8 @@
     if(!isDragging || mode!=="single") return;
     e.preventDefault();
     const p = pointerPos(e);
-
-    pos.x = clamp((p.x - dragOffset.x) / p.w, 0.03, 0.97);
-    pos.y = clamp((p.y - dragOffset.y) / p.h, 0.04, 0.96);
-
+    pos.x = clamp((p.x - dragOffset.x)/p.w, 0.03, 0.97);
+    pos.y = clamp((p.y - dragOffset.y)/p.h, 0.04, 0.96);
     syncDragOverlay();
     updatePreview();
   }
@@ -446,9 +459,8 @@
     $("wmDrag").classList.remove("grab");
   }
 
-  // Pointer events
   const box = $("previewBox");
-  box.addEventListener("pointerdown", (e)=>{
+  box.addEventListener("pointerdown",(e)=>{
     if(e.target === $("wmDrag")){
       $("wmDrag").setPointerCapture(e.pointerId);
       startDrag(e);
@@ -460,30 +472,17 @@
 
   $("resetPos").onclick = ()=>{
     pos = { x: 0.86, y: 0.88 };
-    syncDragOverlay();
-    updatePreview();
+    syncDragOverlay(); updatePreview();
   };
   $("centerPos").onclick = ()=>{
     pos = { x: 0.50, y: 0.50 };
-    syncDragOverlay();
-    updatePreview();
+    syncDragOverlay(); updatePreview();
   };
 
-  // 事件：文件/参数变化
-  $("files").addEventListener("change", ()=>{
-    updateCount();
-    updatePreview();
-  });
-
-  ["text","font","alpha","size","angle","gap"].forEach(id=>{
-    $(id).addEventListener("input", ()=>{
-      syncDragOverlay();
-      updatePreview();
-    });
-    $(id).addEventListener("change", ()=>{
-      syncDragOverlay();
-      updatePreview();
-    });
+  $("files").addEventListener("change", ()=>{ updateCount(); updatePreview(); });
+  ["text","font","alpha","size","angle","gap","shadow","color"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{ syncDragOverlay(); updatePreview(); });
+    $(id).addEventListener("change", ()=>{ syncDragOverlay(); updatePreview(); });
   });
 
   $("fontFile").addEventListener("change", async (e)=>{
@@ -493,36 +492,32 @@
     try{
       await loadUploadedFont(f);
       $("status").textContent = "字体加载成功 ✅ 请选择“使用我上传的字体”。";
-      syncDragOverlay();
-      updatePreview();
+      syncDragOverlay(); updatePreview();
     }catch(err){
-      $("status").textContent = "字体加载失败（可能是不支持格式或 iOS 限制）。";
+      $("status").textContent = "字体加载失败（可能不支持格式或 iOS 限制）。";
     }
   });
 
   $("go").onclick = async ()=>{
     const files = $("files").files;
     if(!files || files.length===0) return;
-
     $("go").disabled = true;
-    $("status").textContent = "处理中…（iPhone 会逐张弹出下载提示）";
+    $("status").textContent = "处理中…（iPhone 会逐张下载）";
 
     for(const f of files){
       const img = await fileToImage(f);
       const canvas = document.createElement("canvas");
       render(img, canvas);
 
-      // 导出 JPG（网图常用）
       const out = canvas.toDataURL("image/jpeg", 0.92);
-      const base = (f.name || "photo").replace(/\.[^.]+$/, "");
+      const base = (f.name||"photo").replace(/\.[^.]+$/, "");
       downloadDataUrl(out, `${base}_wm.jpg`);
     }
 
-    $("status").textContent = "完成 ✅ 下载提示太多就分批选 10–30 张。";
+    $("status").textContent = "完成 ✅（若下载太多，分批选 10–30 张）";
     $("go").disabled = false;
   };
 
-  // 初始化
   setMode("single");
   updateCount();
   syncDragOverlay();
