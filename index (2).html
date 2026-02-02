@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>批量网图加水印（艺术字体）</title>
+
+  <!-- 线上艺术字体（可删掉：删了就只能用系统字体/本地上传字体） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Black+Ops+One&family=DM+Serif+Display&family=Dancing+Script:wght@400;700&family=Lobster&family=Montserrat:wght@300;500;800&family=Orbitron:wght@400;700&family=Oswald:wght@300;600&family=Pacifico&family=Playfair+Display:wght@400;700&family=Righteous&display=swap" rel="stylesheet">
+
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto; padding:16px; max-width:860px; margin:auto; background:#fafafa;}
+    h2{margin:8px 0 6px;}
+    .card{background:#fff;border:1px solid #e6e6e6;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);margin:12px 0;}
+    label{display:block; margin:10px 0 6px; font-weight:650;}
+    input,select,button{width:100%; padding:11px; font-size:16px; border-radius:10px; border:1px solid #d9d9d9; background:#fff;}
+    button{border:none; background:#111; color:#fff; font-weight:700;}
+    button:disabled{opacity:.55;}
+    .grid{display:grid; grid-template-columns:1fr; gap:10px;}
+    @media (min-width:760px){ .grid{grid-template-columns:1fr 1fr;} }
+    small{color:#666; line-height:1.35; display:block; margin-top:8px;}
+    .row{display:flex; gap:10px;}
+    .row > *{flex:1;}
+    .previewWrap{display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;}
+    canvas{max-width:360px; width:100%; height:auto; border-radius:12px; border:1px solid #e7e7e7; background:#f2f2f2;}
+    .pill{display:inline-block; padding:4px 10px; background:#f1f1f1; border-radius:999px; font-size:12px; margin-right:6px;}
+  </style>
+</head>
+<body>
+  <h2>批量网图加水印（艺术字体可选）</h2>
+  <div class="card">
+    <div class="pill">批量</div><div class="pill">艺术字体</div><div class="pill">可上传字体</div><div class="pill">平铺防盗</div>
+    <small>
+      说明：iPhone Safari 通常会“逐张下载”。如果你一次选很多张，系统会弹很多下载提示，属于正常现象。
+    </small>
+  </div>
+
+  <div class="card">
+    <label>选择图片（可多选）</label>
+    <input id="files" type="file" accept="image/*" multiple />
+
+    <div class="grid">
+      <div>
+        <label>水印文字</label>
+        <input id="text" value="SMT S/S 2026" />
+      </div>
+
+      <div>
+        <label>字体（在线艺术字体 + 系统字体）</label>
+        <select id="font">
+          <optgroup label="在线艺术字体（Google Fonts）">
+            <option value="Montserrat">Montserrat（高级简洁）</option>
+            <option value="Bebas Neue">Bebas Neue（时装海报感）</option>
+            <option value="Oswald">Oswald（窄体潮牌）</option>
+            <option value="Anton">Anton（粗体醒目）</option>
+            <option value="Orbitron">Orbitron（科技感）</option>
+            <option value="Righteous">Righteous（复古街头）</option>
+            <option value="Black Ops One">Black Ops One（硬核）</option>
+            <option value="Playfair Display">Playfair Display（高级杂志）</option>
+            <option value="DM Serif Display">DM Serif Display（复古奢感）</option>
+            <option value="Lobster">Lobster（手写复古）</option>
+            <option value="Pacifico">Pacifico（甜酷手写）</option>
+            <option value="Dancing Script">Dancing Script（签名感）</option>
+          </optgroup>
+          <optgroup label="系统字体（离线可用）">
+            <option value="-apple-system">iOS 系统字体</option>
+            <option value="Arial">Arial</option>
+            <option value="Helvetica Neue">Helvetica Neue</option>
+            <option value="Times New Roman">Times New Roman</option>
+          </optgroup>
+          <optgroup label="本地上传字体（你上传后会出现在这里）">
+            <option value="__uploaded__">使用我上传的字体</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
+    <label>上传本地字体（可选：ttf / otf / woff / woff2）</label>
+    <input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" />
+    <small>想完全离线：就上传你喜欢的字体文件，然后字体下拉选“使用我上传的字体”。</small>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label>样式：字号（px）</label>
+        <input id="size" type="number" min="8" max="240" value="48" />
+      </div>
+      <div>
+        <label>透明度（0~1）</label>
+        <input id="alpha" type="number" step="0.05" min="0" max="1" value="0.16" />
+      </div>
+      <div>
+        <label>颜色</label>
+        <input id="color" type="text" value="#FFFFFF" />
+      </div>
+      <div>
+        <label>描边（0~12）</label>
+        <input id="strokeW" type="number" min="0" max="12" value="2" />
+      </div>
+      <div>
+        <label>描边颜色</label>
+        <input id="strokeC" type="text" value="rgba(0,0,0,0.35)" />
+      </div>
+      <div>
+        <label>阴影（0~20）</label>
+        <input id="shadow" type="number" min="0" max="20" value="6" />
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>模式</label>
+        <select id="mode">
+          <option value="corner">角落/居中 单个水印</option>
+          <option value="tile">平铺水印（防盗网图推荐）</option>
+        </select>
+      </div>
+      <div>
+        <label>位置（单个水印时生效）</label>
+        <select id="pos">
+          <option value="br">右下</option>
+          <option value="bl">左下</option>
+          <option value="tr">右上</option>
+          <option value="tl">左上</option>
+          <option value="c">居中</option>
+        </select>
+      </div>
+      <div>
+        <label>边距（px）</label>
+        <input id="pad" type="number" min="0" max="240" value="28" />
+      </div>
+      <div>
+        <label>旋转角度（平铺时常用 -20 ~ -35）</label>
+        <input id="angle" type="number" min="-90" max="90" value="-26" />
+      </div>
+      <div>
+        <label>平铺间距（px）</label>
+        <input id="gap" type="number" min="40" max="600" value="220" />
+      </div>
+      <div>
+        <label>输出格式</label>
+        <select id="fmt">
+          <option value="image/jpeg">JPG（网图常用）</option>
+          <option value="image/png">PNG（更清晰但更大）</option>
+        </select>
+      </div>
+    </div>
+
+    <button id="go" disabled>生成并下载</button>
+    <small id="status">先选择图片即可开始。</small>
+  </div>
+
+  <div class="card">
+    <label>预览（选一张图后会显示第一张）</label>
+    <div class="previewWrap">
+      <canvas id="preview"></canvas>
+    </div>
+    <small>预览只展示第一张图，批量导出会对所有图片应用同样设置。</small>
+  </div>
+
+<script>
+const $ = (id)=>document.getElementById(id);
+
+let uploadedFontFamily = null;
+
+function clamp(n, a, b){ return Math.min(b, Math.max(a, n)); }
+
+async function loadUploadedFont(file){
+  if(!file) return null;
+  const buf = await file.arrayBuffer();
+  const family = "UploadedFont_" + Math.random().toString(16).slice(2);
+  const font = new FontFace(family, buf);
+  await font.load();
+  document.fonts.add(font);
+  uploadedFontFamily = family;
+  return family;
+}
+
+function getFontFamily(){
+  const v = $("font").value;
+  if(v === "__uploaded__"){
+    return uploadedFontFamily || "-apple-system";
+  }
+  return v;
+}
+
+function applyTextStyle(ctx, fontSize){
+  const family = getFontFamily();
+  ctx.font = `${fontSize}px ${family}, -apple-system, "Helvetica Neue", Arial`;
+  ctx.fillStyle = $("color").value || "#fff";
+
+  const shadow = clamp(Number($("shadow").value||0), 0, 20);
+  if(shadow > 0){
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = shadow;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  } else {
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawSingle(ctx, canvasW, canvasH){
+  const text = ($("text").value || "").trim();
+  if(!text) return;
+
+  const alpha = clamp(Number($("alpha").value||0.16), 0, 1);
+  const baseSize = clamp(Number($("size").value||48), 8, 240);
+  const pad = clamp(Number($("pad").value||28), 0, 240);
+
+  // 自适应缩放：大图稍微放大，小图稍微缩小
+  const scale = Math.max(canvasW, canvasH) / 1200;
+  const fontSize = Math.max(10, Math.round(baseSize * scale));
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  applyTextStyle(ctx, fontSize);
+
+  const metrics = ctx.measureText(text);
+  const w = metrics.width;
+
+  let x = pad, y = canvasH - pad;
+  let baseline = "bottom";
+
+  const pos = $("pos").value;
+  if(pos === "br"){ x = canvasW - w - pad; y = canvasH - pad; baseline="bottom"; }
+  if(pos === "bl"){ x = pad; y = canvasH - pad; baseline="bottom"; }
+  if(pos === "tr"){ x = canvasW - w - pad; y = pad; baseline="top"; }
+  if(pos === "tl"){ x = pad; y = pad; baseline="top"; }
+  if(pos === "c"){ x = (canvasW - w)/2; y = canvasH/2; baseline="middle"; }
+
+  ctx.textBaseline = baseline;
+
+  const strokeW = clamp(Number($("strokeW").value||0), 0, 12);
+  if(strokeW > 0){
+    ctx.lineWidth = strokeW;
+    ctx.strokeStyle = $("strokeC").value || "rgba(0,0,0,0.35)";
+    ctx.strokeText(text, x, y);
+  }
+  ctx.fillText(text, x, y);
+
+  ctx.restore();
+}
+
+function drawTile(ctx, canvasW, canvasH){
+  const text = ($("text").value || "").trim();
+  if(!text) return;
+
+  const alpha = clamp(Number($("alpha").value||0.16), 0, 1);
+  const baseSize = clamp(Number($("size").value||48), 8, 240);
+  const gap = clamp(Number($("gap").value||220), 40, 600);
+  const angle = clamp(Number($("angle").value||-26), -90, 90);
+
+  const scale = Math.max(canvasW, canvasH) / 1200;
+  const fontSize = Math.max(10, Math.round(baseSize * scale));
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  applyTextStyle(ctx, fontSize);
+
+  // 旋转平铺
+  ctx.translate(canvasW/2, canvasH/2);
+  ctx.rotate(angle * Math.PI / 180);
+  ctx.translate(-canvasW/2, -canvasH/2);
+
+  ctx.textBaseline = "middle";
+
+  // 计算循环范围
+  const stepX = gap;
+  const stepY = gap;
+
+  const strokeW = clamp(Number($("strokeW").value||0), 0, 12);
+
+  for(let y = -canvasH; y < canvasH*2; y += stepY){
+    for(let x = -canvasW; x < canvasW*2; x += stepX){
+      if(strokeW > 0){
+        ctx.lineWidth = strokeW;
+        ctx.strokeStyle = $("strokeC").value || "rgba(0,0,0,0.35)";
+        ctx.strokeText(text, x, y);
+      }
+      ctx.fillText(text, x, y);
+    }
+  }
+
+  ctx.restore();
+}
+
+async function fileToImage(file){
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.src = url;
+  await img.decode();
+  URL.revokeObjectURL(url);
+  return img;
+}
+
+function renderToCanvas(img){
+  const canvas = $("preview");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img, 0, 0);
+
+  const mode = $("mode").value;
+  if(mode === "tile") drawTile(ctx, canvas.width, canvas.height);
+  else drawSingle(ctx, canvas.width, canvas.height);
+}
+
+function downloadDataUrl(dataUrl, filename){
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function updatePreview(){
+  const files = $("files").files;
+  if(!files || files.length === 0) return;
+  try{
+    const img = await fileToImage(files[0]);
+    renderToCanvas(img);
+  }catch(e){}
+}
+
+$("fontFile").addEventListener("change", async (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  $("status").textContent = "正在加载本地字体…";
+  try{
+    await loadUploadedFont(f);
+    $("status").textContent = "本地字体加载成功 ✅ 你可以在字体下拉里选“使用我上传的字体”。";
+    await updatePreview();
+  }catch(err){
+    $("status").textContent = "本地字体加载失败（可能是不支持的字体格式或 iOS 限制）。";
+  }
+});
+
+$("files").addEventListener("change", async ()=>{
+  const n = $("files").files?.length || 0;
+  $("go").disabled = n === 0;
+  $("status").textContent = n ? `已选择 ${n} 张图。调整参数后点“生成并下载”。` : "先选择图片即可开始。";
+  await updatePreview();
+});
+
+// 任何参数改动都更新预览
+["text","font","alpha","size","color","strokeW","strokeC","shadow","mode","pos","pad","angle","gap","fmt"]
+  .forEach(id => $(id).addEventListener("input", updatePreview));
+["font","mode","pos","fmt"].forEach(id => $(id).addEventListener("change", updatePreview));
+
+$("go").onclick = async ()=>{
+  const files = $("files").files;
+  if(!files || files.length === 0) return;
+
+  const fmt = $("fmt").value;
+  const quality = (fmt === "image/jpeg") ? 0.92 : 1.0;
+
+  $("go").disabled = true;
+  $("status").textContent = "处理中…（iPhone 会逐张弹出下载）";
+
+  for(const f of files){
+    const img = await fileToImage(f);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(img, 0, 0);
+    const mode = $("mode").value;
+    if(mode === "tile") drawTile(ctx, canvas.width, canvas.height);
+    else drawSingle(ctx, canvas.width, canvas.height);
+
+    const out = canvas.toDataURL(fmt, quality);
+    const base = (f.name || "photo").replace(/\.[^.]+$/, "");
+    const ext = (fmt === "image/png") ? "png" : "jpg";
+    downloadDataUrl(out, `${base}_wm.${ext}`);
+  }
+
+  $("status").textContent = "完成 ✅ 如果下载提示太多，分批每次选 10~30 张更舒服。";
+  $("go").disabled = false;
+};
+</script>
+</body>
+</html>
