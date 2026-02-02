@@ -2,393 +2,482 @@
 <html lang="zh">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>批量网图加水印（艺术字体）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Batch Watermark</title>
 
-  <!-- 线上艺术字体（可删掉：删了就只能用系统字体/本地上传字体） -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Black+Ops+One&family=DM+Serif+Display&family=Dancing+Script:wght@400;700&family=Lobster&family=Montserrat:wght@300;500;800&family=Orbitron:wght@400;700&family=Oswald:wght@300;600&family=Pacifico&family=Playfair+Display:wght@400;700&family=Righteous&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@300;500;800&family=Playfair+Display:wght@400;700&family=Pacifico&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
   <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto; padding:16px; max-width:860px; margin:auto; background:#fafafa;}
-    h2{margin:8px 0 6px;}
-    .card{background:#fff;border:1px solid #e6e6e6;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.04);margin:12px 0;}
-    label{display:block; margin:10px 0 6px; font-weight:650;}
-    input,select,button{width:100%; padding:11px; font-size:16px; border-radius:10px; border:1px solid #d9d9d9; background:#fff;}
-    button{border:none; background:#111; color:#fff; font-weight:700;}
-    button:disabled{opacity:.55;}
-    .grid{display:grid; grid-template-columns:1fr; gap:10px;}
-    @media (min-width:760px){ .grid{grid-template-columns:1fr 1fr;} }
-    small{color:#666; line-height:1.35; display:block; margin-top:8px;}
-    .row{display:flex; gap:10px;}
+    :root{
+      --bg1:#fff5f8; --bg2:#f4f3ff; --card:rgba(255,255,255,.82);
+      --stroke:rgba(0,0,0,.06); --text:#1f1f24; --sub:#6a6a78;
+      --accent:#ff5c93; --accent2:#6c63ff; --btn:#121218; --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Display","SF Pro Text","Helvetica Neue",Arial;
+      color:var(--text);
+      background: radial-gradient(1200px 800px at 10% 0%, var(--bg1), transparent 60%),
+                  radial-gradient(1200px 800px at 90% 20%, var(--bg2), transparent 55%),
+                  linear-gradient(180deg, #ffffff, #fafafa);
+      min-height:100vh;
+      padding: calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+    }
+    .wrap{max-width:540px;margin:0 auto;}
+    .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .title{font-size:18px;font-weight:800;letter-spacing:.2px;display:flex;gap:8px;align-items:center;}
+    .dot{width:10px;height:10px;border-radius:999px;background: linear-gradient(135deg, var(--accent), var(--accent2));box-shadow:0 6px 18px rgba(255,92,147,.25);}
+    .hint{font-size:12px;color:var(--sub);line-height:1.4;margin:6px 0 12px;}
+    .card{
+      background: var(--card); border:1px solid var(--stroke); border-radius: var(--radius);
+      padding:14px; box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin:12px 0;
+    }
+    label{display:block;font-size:13px;color:var(--sub);margin:10px 0 6px;}
+    input, select, button{
+      width:100%; padding:12px 12px; border-radius:14px;
+      border:1px solid rgba(0,0,0,.08); background: rgba(255,255,255,.9);
+      font-size:16px; outline:none;
+    }
+    input:focus,select:focus{border-color: rgba(108,99,255,.35); box-shadow: 0 0 0 4px rgba(108,99,255,.10);}
+    .row{display:flex;gap:10px;}
     .row > *{flex:1;}
-    .previewWrap{display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;}
-    canvas{max-width:360px; width:100%; height:auto; border-radius:12px; border:1px solid #e7e7e7; background:#f2f2f2;}
-    .pill{display:inline-block; padding:4px 10px; background:#f1f1f1; border-radius:999px; font-size:12px; margin-right:6px;}
+    .seg{display:flex;gap:10px;}
+    .seg button{flex:1;background: rgba(255,255,255,.85); color: var(--text); border:1px solid rgba(0,0,0,.08); font-weight:800; padding:12px 10px;}
+    .seg button.active{background: linear-gradient(135deg, rgba(255,92,147,.14), rgba(108,99,255,.14)); border-color: rgba(255,92,147,.25);}
+    .cta{background: var(--btn); color:#fff; border:none; font-weight:900; padding:13px 14px; box-shadow: 0 12px 26px rgba(18,18,24,.22);}
+    .cta:disabled{opacity:.55;box-shadow:none}
+    .mini{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.45;}
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:7px 10px;border-radius:999px;background: rgba(255,255,255,.75);border:1px solid rgba(0,0,0,.06);font-size:12px;color:var(--sub);}
+    .divider{height:1px;background:rgba(0,0,0,.06);margin:12px 0;}
+    .hidden{display:none!important;}
+
+    /* 预览容器：在上面叠加可拖动水印 */
+    .previewBox{
+      position:relative; width:100%;
+      border-radius:16px; overflow:hidden;
+      border:1px solid rgba(0,0,0,.06);
+      background:#f2f2f6;
+      touch-action:none; /* 让拖动更顺 */
+    }
+    canvas{display:block;width:100%;height:auto;}
+    .wmDrag{
+      position:absolute;
+      left:50%; top:50%;
+      transform: translate(-50%,-50%);
+      padding:6px 10px;
+      border-radius:12px;
+      background: rgba(255,255,255,.0);
+      color:#fff;
+      font-weight:800;
+      white-space:nowrap;
+      user-select:none;
+      -webkit-user-select:none;
+      text-shadow: 0 2px 10px rgba(0,0,0,.25);
+      border: 1px dashed rgba(255,255,255,.35);
+      backdrop-filter: blur(0px);
+    }
+    .wmDrag.grab{border-style:solid; background: rgba(255,255,255,.10);}
+    .btnRow{display:flex;gap:10px;}
+    .btnRow button{font-weight:800}
+    .ghost{background: rgba(255,255,255,.85); color: var(--text); border:1px solid rgba(0,0,0,.08);}
   </style>
 </head>
+
 <body>
-  <h2>批量网图加水印（艺术字体可选）</h2>
-  <div class="card">
-    <div class="pill">批量</div><div class="pill">艺术字体</div><div class="pill">可上传字体</div><div class="pill">平铺防盗</div>
-    <small>
-      说明：iPhone Safari 通常会“逐张下载”。如果你一次选很多张，系统会弹很多下载提示，属于正常现象。
-    </small>
+<div class="wrap">
+
+  <div class="top">
+    <div class="title"><span class="dot"></span>小薇专用批量加水印</div>
+    <div class="pill" id="countPill">未选图</div>
+  </div>
+  <div class="hint">
+    单个水印：直接在预览图上 <b>拖动文字</b> 调位置（边拖边看）。<br/>
+    平铺水印：用于网图防盗。
   </div>
 
   <div class="card">
     <label>选择图片（可多选）</label>
     <input id="files" type="file" accept="image/*" multiple />
 
-    <div class="grid">
-      <div>
-        <label>水印文字</label>
-        <input id="text" value="SMT S/S 2026" />
-      </div>
+    <label>水印文字</label>
+    <input id="text" value="SMT S/S 2026" />
 
-      <div>
-        <label>字体（在线艺术字体 + 系统字体）</label>
-        <select id="font">
-          <optgroup label="在线艺术字体（Google Fonts）">
-            <option value="Montserrat">Montserrat（高级简洁）</option>
-            <option value="Bebas Neue">Bebas Neue（时装海报感）</option>
-            <option value="Oswald">Oswald（窄体潮牌）</option>
-            <option value="Anton">Anton（粗体醒目）</option>
-            <option value="Orbitron">Orbitron（科技感）</option>
-            <option value="Righteous">Righteous（复古街头）</option>
-            <option value="Black Ops One">Black Ops One（硬核）</option>
-            <option value="Playfair Display">Playfair Display（高级杂志）</option>
-            <option value="DM Serif Display">DM Serif Display（复古奢感）</option>
-            <option value="Lobster">Lobster（手写复古）</option>
-            <option value="Pacifico">Pacifico（甜酷手写）</option>
-            <option value="Dancing Script">Dancing Script（签名感）</option>
-          </optgroup>
-          <optgroup label="系统字体（离线可用）">
-            <option value="-apple-system">iOS 系统字体</option>
-            <option value="Arial">Arial</option>
-            <option value="Helvetica Neue">Helvetica Neue</option>
-            <option value="Times New Roman">Times New Roman</option>
-          </optgroup>
-          <optgroup label="本地上传字体（你上传后会出现在这里）">
-            <option value="__uploaded__">使用我上传的字体</option>
-          </optgroup>
-        </select>
-      </div>
+    <label>水印模式</label>
+    <div class="seg">
+      <button id="btnSingle" class="active" type="button">单个（可拖动）</button>
+      <button id="btnTile" type="button">平铺</button>
     </div>
 
-    <label>上传本地字体（可选：ttf / otf / woff / woff2）</label>
+    <div class="divider"></div>
+
+    <label>字体</label>
+    <select id="font">
+      <option value="Montserrat">Montserrat（高级简洁）</option>
+      <option value="Bebas Neue">Bebas Neue（时装海报感）</option>
+      <option value="Playfair Display">Playfair Display（杂志高级）</option>
+      <option value="Pacifico">Pacifico（甜酷手写）</option>
+      <option value="Orbitron">Orbitron（科技感）</option>
+      <option value="-apple-system">iOS 系统字体（离线可用）</option>
+      <option value="__uploaded__">使用我上传的字体</option>
+    </select>
+
+    <label>上传本地字体（可选）</label>
     <input id="fontFile" type="file" accept=".ttf,.otf,.woff,.woff2" />
-    <small>想完全离线：就上传你喜欢的字体文件，然后字体下拉选“使用我上传的字体”。</small>
+    <div class="mini" id="fontTip">上传后字体选择“使用我上传的字体”。</div>
   </div>
 
   <div class="card">
-    <div class="grid">
+    <div class="row">
       <div>
-        <label>样式：字号（px）</label>
-        <input id="size" type="number" min="8" max="240" value="48" />
+        <label>透明度</label>
+        <input id="alpha" type="number" step="0.01" min="0" max="1" value="0.16" />
       </div>
       <div>
-        <label>透明度（0~1）</label>
-        <input id="alpha" type="number" step="0.05" min="0" max="1" value="0.16" />
-      </div>
-      <div>
-        <label>颜色</label>
-        <input id="color" type="text" value="#FFFFFF" />
-      </div>
-      <div>
-        <label>描边（0~12）</label>
-        <input id="strokeW" type="number" min="0" max="12" value="2" />
-      </div>
-      <div>
-        <label>描边颜色</label>
-        <input id="strokeC" type="text" value="rgba(0,0,0,0.35)" />
-      </div>
-      <div>
-        <label>阴影（0~20）</label>
-        <input id="shadow" type="number" min="0" max="20" value="6" />
+        <label>大小</label>
+        <input id="size" type="number" min="10" max="160" value="52" />
       </div>
     </div>
 
-    <div class="grid">
-      <div>
-        <label>模式</label>
-        <select id="mode">
-          <option value="corner">角落/居中 单个水印</option>
-          <option value="tile">平铺水印（防盗网图推荐）</option>
-        </select>
-      </div>
-      <div>
-        <label>位置（单个水印时生效）</label>
-        <select id="pos">
-          <option value="br">右下</option>
-          <option value="bl">左下</option>
-          <option value="tr">右上</option>
-          <option value="tl">左上</option>
-          <option value="c">居中</option>
-        </select>
-      </div>
-      <div>
-        <label>边距（px）</label>
-        <input id="pad" type="number" min="0" max="240" value="28" />
-      </div>
-      <div>
-        <label>旋转角度（平铺时常用 -20 ~ -35）</label>
-        <input id="angle" type="number" min="-90" max="90" value="-26" />
-      </div>
-      <div>
-        <label>平铺间距（px）</label>
-        <input id="gap" type="number" min="40" max="600" value="220" />
-      </div>
-      <div>
-        <label>输出格式</label>
-        <select id="fmt">
-          <option value="image/jpeg">JPG（网图常用）</option>
-          <option value="image/png">PNG（更清晰但更大）</option>
-        </select>
-      </div>
+    <div id="tileControls" class="hidden">
+      <label>平铺角度（-20~-35 常用）</label>
+      <input id="angle" type="number" min="-90" max="90" value="-26" />
+      <label>平铺间距（180–260 常用）</label>
+      <input id="gap" type="number" min="60" max="600" value="220" />
     </div>
 
-    <button id="go" disabled>生成并下载</button>
-    <small id="status">先选择图片即可开始。</small>
+    <div class="divider"></div>
+    <button id="go" class="cta" disabled type="button">生成并下载</button>
+    <div class="mini" id="status">先选择图片即可开始。</div>
   </div>
 
   <div class="card">
-    <label>预览（选一张图后会显示第一张）</label>
-    <div class="previewWrap">
+    <label>预览（拖动水印调整位置）</label>
+
+    <div class="previewBox" id="previewBox">
       <canvas id="preview"></canvas>
+      <div id="wmDrag" class="wmDrag">SMT S/S 2026</div>
     </div>
-    <small>预览只展示第一张图，批量导出会对所有图片应用同样设置。</small>
+
+    <div class="btnRow" style="margin-top:10px;">
+      <button id="resetPos" class="ghost" type="button">重置到右下角</button>
+      <button id="centerPos" class="ghost" type="button">居中</button>
+    </div>
+
+    <div class="mini" id="posInfo">位置：—</div>
   </div>
+
+</div>
 
 <script>
-const $ = (id)=>document.getElementById(id);
+  const $ = (id)=>document.getElementById(id);
 
-let uploadedFontFamily = null;
+  let mode = "single"; // single | tile
+  let uploadedFontFamily = null;
 
-function clamp(n, a, b){ return Math.min(b, Math.max(a, n)); }
+  // 保存拖动位置（相对百分比，0~1）
+  let pos = { x: 0.86, y: 0.88 }; // 默认右下舒服位置
+  let isDragging = false;
+  let dragOffset = { x: 0, y: 0 };
 
-async function loadUploadedFont(file){
-  if(!file) return null;
-  const buf = await file.arrayBuffer();
-  const family = "UploadedFont_" + Math.random().toString(16).slice(2);
-  const font = new FontFace(family, buf);
-  await font.load();
-  document.fonts.add(font);
-  uploadedFontFamily = family;
-  return family;
-}
+  function clamp(n,a,b){ return Math.min(b, Math.max(a,n)); }
 
-function getFontFamily(){
-  const v = $("font").value;
-  if(v === "__uploaded__"){
-    return uploadedFontFamily || "-apple-system";
+  function setMode(next){
+    mode = next;
+    $("btnSingle").classList.toggle("active", mode==="single");
+    $("btnTile").classList.toggle("active", mode==="tile");
+    $("tileControls").classList.toggle("hidden", mode!=="tile");
+
+    // 单个模式显示可拖动层；平铺模式隐藏拖动层
+    $("wmDrag").style.display = (mode==="single") ? "block" : "none";
+    updatePreview();
   }
-  return v;
-}
+  $("btnSingle").onclick = ()=>setMode("single");
+  $("btnTile").onclick = ()=>setMode("tile");
 
-function applyTextStyle(ctx, fontSize){
-  const family = getFontFamily();
-  ctx.font = `${fontSize}px ${family}, -apple-system, "Helvetica Neue", Arial`;
-  ctx.fillStyle = $("color").value || "#fff";
-
-  const shadow = clamp(Number($("shadow").value||0), 0, 20);
-  if(shadow > 0){
-    ctx.shadowColor = "rgba(0,0,0,0.35)";
-    ctx.shadowBlur = shadow;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-  } else {
-    ctx.shadowColor = "transparent";
-    ctx.shadowBlur = 0;
+  async function loadUploadedFont(file){
+    const buf = await file.arrayBuffer();
+    const family = "UploadedFont_" + Math.random().toString(16).slice(2);
+    const font = new FontFace(family, buf);
+    await font.load();
+    document.fonts.add(font);
+    uploadedFontFamily = family;
+    return family;
   }
-}
 
-function drawSingle(ctx, canvasW, canvasH){
-  const text = ($("text").value || "").trim();
-  if(!text) return;
+  function getFontFamily(){
+    const v = $("font").value;
+    if(v === "__uploaded__") return uploadedFontFamily || "-apple-system";
+    return v;
+  }
 
-  const alpha = clamp(Number($("alpha").value||0.16), 0, 1);
-  const baseSize = clamp(Number($("size").value||48), 8, 240);
-  const pad = clamp(Number($("pad").value||28), 0, 240);
+  async function fileToImage(file){
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.src = url;
+    await img.decode();
+    URL.revokeObjectURL(url);
+    return img;
+  }
 
-  // 自适应缩放：大图稍微放大，小图稍微缩小
-  const scale = Math.max(canvasW, canvasH) / 1200;
-  const fontSize = Math.max(10, Math.round(baseSize * scale));
+  function applyText(ctx, fontSize){
+    const family = getFontFamily();
+    ctx.font = `${fontSize}px ${family}, -apple-system, "Helvetica Neue", Arial`;
+    ctx.fillStyle = "#fff";
+    ctx.lineWidth = Math.max(2, Math.round(fontSize/18));
+    ctx.strokeStyle = "rgba(0,0,0,0.28)";
+  }
 
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  applyTextStyle(ctx, fontSize);
+  function drawSingleAt(ctx, w, h){
+    const text = ($("text").value||"").trim();
+    if(!text) return;
 
-  const metrics = ctx.measureText(text);
-  const w = metrics.width;
+    const alpha = clamp(Number($("alpha").value||0.16),0,1);
+    const baseSize = clamp(Number($("size").value||52),10,160);
+    const scale = Math.max(w,h)/1200;
+    const fontSize = Math.max(12, Math.round(baseSize*scale));
 
-  let x = pad, y = canvasH - pad;
-  let baseline = "bottom";
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    applyText(ctx, fontSize);
 
-  const pos = $("pos").value;
-  if(pos === "br"){ x = canvasW - w - pad; y = canvasH - pad; baseline="bottom"; }
-  if(pos === "bl"){ x = pad; y = canvasH - pad; baseline="bottom"; }
-  if(pos === "tr"){ x = canvasW - w - pad; y = pad; baseline="top"; }
-  if(pos === "tl"){ x = pad; y = pad; baseline="top"; }
-  if(pos === "c"){ x = (canvasW - w)/2; y = canvasH/2; baseline="middle"; }
+    // 基于相对坐标定位（pos.x / pos.y）
+    ctx.textBaseline = "middle";
+    const metrics = ctx.measureText(text);
+    const tw = metrics.width;
+    const x = clamp(pos.x, 0.02, 0.98) * w - tw/2;
+    const y = clamp(pos.y, 0.02, 0.98) * h;
 
-  ctx.textBaseline = baseline;
-
-  const strokeW = clamp(Number($("strokeW").value||0), 0, 12);
-  if(strokeW > 0){
-    ctx.lineWidth = strokeW;
-    ctx.strokeStyle = $("strokeC").value || "rgba(0,0,0,0.35)";
     ctx.strokeText(text, x, y);
+    ctx.fillText(text, x, y);
+
+    ctx.restore();
   }
-  ctx.fillText(text, x, y);
 
-  ctx.restore();
-}
+  function drawTile(ctx, w, h){
+    const text = ($("text").value||"").trim();
+    if(!text) return;
 
-function drawTile(ctx, canvasW, canvasH){
-  const text = ($("text").value || "").trim();
-  if(!text) return;
+    const alpha = clamp(Number($("alpha").value||0.16),0,1);
+    const baseSize = clamp(Number($("size").value||52),10,160);
+    const gap = clamp(Number($("gap").value||220),60,600);
+    const angle = clamp(Number($("angle").value||-26),-90,90);
 
-  const alpha = clamp(Number($("alpha").value||0.16), 0, 1);
-  const baseSize = clamp(Number($("size").value||48), 8, 240);
-  const gap = clamp(Number($("gap").value||220), 40, 600);
-  const angle = clamp(Number($("angle").value||-26), -90, 90);
+    const scale = Math.max(w,h)/1200;
+    const fontSize = Math.max(12, Math.round(baseSize*scale));
 
-  const scale = Math.max(canvasW, canvasH) / 1200;
-  const fontSize = Math.max(10, Math.round(baseSize * scale));
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    applyText(ctx, fontSize);
 
-  ctx.save();
-  ctx.globalAlpha = alpha;
-  applyTextStyle(ctx, fontSize);
+    ctx.translate(w/2, h/2);
+    ctx.rotate(angle*Math.PI/180);
+    ctx.translate(-w/2, -h/2);
 
-  // 旋转平铺
-  ctx.translate(canvasW/2, canvasH/2);
-  ctx.rotate(angle * Math.PI / 180);
-  ctx.translate(-canvasW/2, -canvasH/2);
+    ctx.textBaseline = "middle";
+    const step = gap;
 
-  ctx.textBaseline = "middle";
-
-  // 计算循环范围
-  const stepX = gap;
-  const stepY = gap;
-
-  const strokeW = clamp(Number($("strokeW").value||0), 0, 12);
-
-  for(let y = -canvasH; y < canvasH*2; y += stepY){
-    for(let x = -canvasW; x < canvasW*2; x += stepX){
-      if(strokeW > 0){
-        ctx.lineWidth = strokeW;
-        ctx.strokeStyle = $("strokeC").value || "rgba(0,0,0,0.35)";
+    for(let y=-h; y<h*2; y+=step){
+      for(let x=-w; x<w*2; x+=step){
         ctx.strokeText(text, x, y);
+        ctx.fillText(text, x, y);
       }
-      ctx.fillText(text, x, y);
     }
+    ctx.restore();
   }
 
-  ctx.restore();
-}
-
-async function fileToImage(file){
-  const url = URL.createObjectURL(file);
-  const img = new Image();
-  img.src = url;
-  await img.decode();
-  URL.revokeObjectURL(url);
-  return img;
-}
-
-function renderToCanvas(img){
-  const canvas = $("preview");
-  const ctx = canvas.getContext("2d");
-
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.drawImage(img, 0, 0);
-
-  const mode = $("mode").value;
-  if(mode === "tile") drawTile(ctx, canvas.width, canvas.height);
-  else drawSingle(ctx, canvas.width, canvas.height);
-}
-
-function downloadDataUrl(dataUrl, filename){
-  const a = document.createElement("a");
-  a.href = dataUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-
-async function updatePreview(){
-  const files = $("files").files;
-  if(!files || files.length === 0) return;
-  try{
-    const img = await fileToImage(files[0]);
-    renderToCanvas(img);
-  }catch(e){}
-}
-
-$("fontFile").addEventListener("change", async (e)=>{
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
-  $("status").textContent = "正在加载本地字体…";
-  try{
-    await loadUploadedFont(f);
-    $("status").textContent = "本地字体加载成功 ✅ 你可以在字体下拉里选“使用我上传的字体”。";
-    await updatePreview();
-  }catch(err){
-    $("status").textContent = "本地字体加载失败（可能是不支持的字体格式或 iOS 限制）。";
-  }
-});
-
-$("files").addEventListener("change", async ()=>{
-  const n = $("files").files?.length || 0;
-  $("go").disabled = n === 0;
-  $("status").textContent = n ? `已选择 ${n} 张图。调整参数后点“生成并下载”。` : "先选择图片即可开始。";
-  await updatePreview();
-});
-
-// 任何参数改动都更新预览
-["text","font","alpha","size","color","strokeW","strokeC","shadow","mode","pos","pad","angle","gap","fmt"]
-  .forEach(id => $(id).addEventListener("input", updatePreview));
-["font","mode","pos","fmt"].forEach(id => $(id).addEventListener("change", updatePreview));
-
-$("go").onclick = async ()=>{
-  const files = $("files").files;
-  if(!files || files.length === 0) return;
-
-  const fmt = $("fmt").value;
-  const quality = (fmt === "image/jpeg") ? 0.92 : 1.0;
-
-  $("go").disabled = true;
-  $("status").textContent = "处理中…（iPhone 会逐张弹出下载）";
-
-  for(const f of files){
-    const img = await fileToImage(f);
-
-    const canvas = document.createElement("canvas");
+  function render(img, canvas){
+    const ctx = canvas.getContext("2d");
     canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext("2d");
-
+    ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(img, 0, 0);
-    const mode = $("mode").value;
-    if(mode === "tile") drawTile(ctx, canvas.width, canvas.height);
-    else drawSingle(ctx, canvas.width, canvas.height);
 
-    const out = canvas.toDataURL(fmt, quality);
-    const base = (f.name || "photo").replace(/\.[^.]+$/, "");
-    const ext = (fmt === "image/png") ? "png" : "jpg";
-    downloadDataUrl(out, `${base}_wm.${ext}`);
+    if(mode==="tile") drawTile(ctx, canvas.width, canvas.height);
+    else drawSingleAt(ctx, canvas.width, canvas.height);
   }
 
-  $("status").textContent = "完成 ✅ 如果下载提示太多，分批每次选 10~30 张更舒服。";
-  $("go").disabled = false;
-};
+  async function updatePreview(){
+    const files = $("files").files;
+    if(!files || files.length===0) return;
+    try{
+      const img = await fileToImage(files[0]);
+      render(img, $("preview"));
+      syncDragOverlay(); // 让拖动层跟着位置走
+    }catch(e){}
+  }
+
+  function downloadDataUrl(dataUrl, filename){
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  function updateCount(){
+    const n = $("files").files?.length || 0;
+    $("countPill").textContent = n ? `已选 ${n} 张` : "未选图";
+    $("go").disabled = n===0;
+    $("status").textContent = n ? "调好参数 → 点“生成并下载”" : "先选择图片即可开始。";
+  }
+
+  // ===== 拖动层：实时显示 + 记录相对坐标 =====
+  function syncDragOverlay(){
+    const box = $("previewBox");
+    const wm = $("wmDrag");
+
+    // 更新水印层文字、字体、透明度、大小（更接近真实效果）
+    const text = ($("text").value||"").trim() || " ";
+    wm.textContent = text;
+    wm.style.opacity = clamp(Number($("alpha").value||0.16),0,1);
+    wm.style.fontFamily = `${getFontFamily()}, -apple-system, "Helvetica Neue", Arial`;
+
+    // 让预览上的字号跟输入的“大小”接近（按容器宽度做个比例）
+    const baseSize = clamp(Number($("size").value||52),10,160);
+    const scale = box.clientWidth / 420; // 让手机预览大致一致
+    wm.style.fontSize = Math.max(12, Math.round(baseSize*scale)) + "px";
+    wm.style.textShadow = "0 2px 10px rgba(0,0,0,.25)";
+
+    // 位置：pos.x pos.y -> 像素
+    const x = pos.x * box.clientWidth;
+    const y = pos.y * box.clientHeight;
+    wm.style.left = x + "px";
+    wm.style.top = y + "px";
+    wm.style.transform = "translate(-50%,-50%)";
+
+    $("posInfo").textContent = `位置：${Math.round(pos.x*100)}% , ${Math.round(pos.y*100)}%（拖动可改）`;
+  }
+
+  function pointerPos(e){
+    const box = $("previewBox");
+    const rect = box.getBoundingClientRect();
+    const x = (e.clientX - rect.left);
+    const y = (e.clientY - rect.top);
+    return { x, y, w: rect.width, h: rect.height };
+  }
+
+  function startDrag(e){
+    if(mode!=="single") return;
+    const wm = $("wmDrag");
+    const p = pointerPos(e);
+    isDragging = true;
+    wm.classList.add("grab");
+
+    // 记录偏移（让拖动更跟手）
+    const curX = pos.x * p.w;
+    const curY = pos.y * p.h;
+    dragOffset.x = p.x - curX;
+    dragOffset.y = p.y - curY;
+  }
+
+  function moveDrag(e){
+    if(!isDragging || mode!=="single") return;
+    e.preventDefault();
+
+    const p = pointerPos(e);
+    const nx = (p.x - dragOffset.x) / p.w;
+    const ny = (p.y - dragOffset.y) / p.h;
+
+    pos.x = clamp(nx, 0.03, 0.97);
+    pos.y = clamp(ny, 0.04, 0.96);
+
+    syncDragOverlay();
+    updatePreview(); // 实时把位置画到canvas上（第一张）
+  }
+
+  function endDrag(){
+    if(!isDragging) return;
+    isDragging = false;
+    $("wmDrag").classList.remove("grab");
+  }
+
+  // Pointer events（iOS Safari 支持）
+  const box = $("previewBox");
+  box.addEventListener("pointerdown", (e)=>{
+    // 只允许点到水印层开始拖动
+    const wm = $("wmDrag");
+    if(e.target === wm){
+      wm.setPointerCapture(e.pointerId);
+      startDrag(e);
+    }
+  });
+  box.addEventListener("pointermove", moveDrag);
+  box.addEventListener("pointerup", endDrag);
+  box.addEventListener("pointercancel", endDrag);
+
+  // 重置/居中
+  $("resetPos").onclick = ()=>{
+    pos = { x: 0.86, y: 0.88 };
+    syncDragOverlay();
+    updatePreview();
+  };
+  $("centerPos").onclick = ()=>{
+    pos = { x: 0.50, y: 0.50 };
+    syncDragOverlay();
+    updatePreview();
+  };
+
+  // ===== 事件绑定 =====
+  $("files").addEventListener("change", ()=>{
+    updateCount();
+    updatePreview();
+  });
+
+  ["text","font","alpha","size","angle","gap"].forEach(id=>{
+    $(id).addEventListener("input", ()=>{
+      syncDragOverlay();
+      updatePreview();
+    });
+    $(id).addEventListener("change", ()=>{
+      syncDragOverlay();
+      updatePreview();
+    });
+  });
+
+  $("fontFile").addEventListener("change", async (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    $("status").textContent = "正在加载本地字体…";
+    try{
+      await loadUploadedFont(f);
+      $("status").textContent = "字体加载成功 ✅ 可选“使用我上传的字体”。";
+      syncDragOverlay();
+      await updatePreview();
+    }catch(err){
+      $("status").textContent = "字体加载失败（可能是不支持格式或 iOS 限制）。";
+    }
+  });
+
+  $("go").onclick = async ()=>{
+    const files = $("files").files;
+    if(!files || files.length===0) return;
+
+    $("go").disabled = true;
+    $("status").textContent = "处理中…（iPhone 会逐张弹出下载提示）";
+
+    for(const f of files){
+      const img = await fileToImage(f);
+      const canvas = document.createElement("canvas");
+      render(img, canvas);
+
+      const out = canvas.toDataURL("image/jpeg", 0.92);
+      const base = (f.name || "photo").replace(/\.[^.]+$/, "");
+      downloadDataUrl(out, `${base}_wm.jpg`);
+    }
+
+    $("status").textContent = "完成 ✅ 下载提示多就分批选图。";
+    $("go").disabled = false;
+  };
+
+  // 初始化
+  setMode("single");
+  updateCount();
+  syncDragOverlay();
 </script>
 </body>
 </html>
-
